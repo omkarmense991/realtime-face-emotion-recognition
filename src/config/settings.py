@@ -9,3 +9,7 @@ RECOGNITION_THRESHOLD = 0.65
 
 # Performance
 SCALE = 0.5
+
+
+# Emotion
+EMOTION_INTERVAL = 6

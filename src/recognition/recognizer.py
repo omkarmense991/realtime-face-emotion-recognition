@@ -4,7 +4,7 @@ from deepface import DeepFace
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
-from config.settings import RECOGNITION_THRESHOLD
+from src.config.settings import RECOGNITION_THRESHOLD
 
 
 class FaceRecognizer:

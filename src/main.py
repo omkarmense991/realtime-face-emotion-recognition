@@ -5,6 +5,7 @@ import cv2
 from src.detection.detector import FaceDetector
 from src.recognition.recognizer import FaceRecognizer
 from src.recognition.database import FaceDatabase
+from src.emotion.classifier import EmotionClassifier
 
 from src.pipeline.frame_processor import FrameProcessor
 
@@ -20,11 +21,13 @@ def main():
     detector = FaceDetector()
     recognizer = FaceRecognizer()
     database = FaceDatabase()
+    emotion_classifier = EmotionClassifier()
 
     processor = FrameProcessor(
-        detector,
-        recognizer,
-        database,
+        detector=detector,
+        recognizer=recognizer,
+        database=database,
+        emotion_classifier=emotion_classifier,
     )
 
     frame_count = 0
@@ -48,7 +51,7 @@ def main():
             x, y, w, h = f["bbox"]
 
             name = f["name"]
-            score = f["score"]
+            emotion = f["emotion"]
 
             cv2.rectangle(
                 frame,
@@ -60,7 +63,7 @@ def main():
 
             cv2.putText(
                 frame,
-                f"{name} ({score:.2f})",
+                f"{name} : {emotion}",
                 (x, y - 10),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.7,
