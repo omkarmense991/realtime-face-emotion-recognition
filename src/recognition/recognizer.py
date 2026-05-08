@@ -4,6 +4,8 @@ from deepface import DeepFace
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
+from config.settings import RECOGNITION_THRESHOLD
+
 
 class FaceRecognizer:
 
@@ -28,7 +30,7 @@ class FaceRecognizer:
 
         return similarity
 
-    def recognize(self, embedding, database, threshold=0.65):
+    def recognize(self, embedding, database, threshold=RECOGNITION_THRESHOLD):
 
         best_match = "Unknown"
         best_score = -1

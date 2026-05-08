@@ -27,8 +27,6 @@ class FaceDetector:
             if face_crop.size == 0:
                 continue
 
-            results.append(
-                {"bbox": [x, y, w, h], "confidence": confidence, "face": face_crop}
-            )
+            results.append({"bbox": [x, y, w, h], "confidence": confidence})
 
         return results
