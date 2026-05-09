@@ -69,7 +69,7 @@ class FrameProcessor:
             fy=SCALE,
         )
 
-        if frame_count % DETECTION_INTERVAL != 0:
+        if frame_count is not None and frame_count % DETECTION_INTERVAL != 0:
             return self.faces
 
         detections = self.detector.detect(small_frame)
@@ -120,7 +120,11 @@ class FrameProcessor:
             current_emotion = self.last_emotion["emotion"]
             emotion_score = self.last_emotion["score"]
 
-            if frame_count % RECOGNITION_INTERVAL == 0:
+            should_run_recognition = (
+                frame_count is None or frame_count % RECOGNITION_INTERVAL == 0
+            )
+
+            if should_run_recognition:
 
                 try:
 
@@ -140,7 +144,11 @@ class FrameProcessor:
 
                     print(f"Recognition error: {e}")
 
-            if frame_count % EMOTION_INTERVAL == 0:
+            should_run_emotion = (
+                frame_count is None or frame_count % EMOTION_INTERVAL == 0
+            )
+
+            if should_run_emotion:
                 try:
                     raw_emotion, emotion_score = (
                         self.emotion_classifier.predict_emotion(face_crop)
