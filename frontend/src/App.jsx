@@ -16,8 +16,8 @@ import RegisterUser from
 import UsersPanel from
   "./components/UsersPanel";
 
-import LogsPanel from
-  "./components/LogsPanel";
+// import LogsPanel from
+//   "./components/LogsPanel";
 
 import { api } from
   "./services/api";
@@ -30,8 +30,8 @@ function App() {
   const [faces, setFaces] =
     useState([]);
 
-  const [logs, setLogs] =
-    useState([]);
+  // const [logs, setLogs] =
+  //   useState([]);
 
   const [users, setUsers] =
     useState([]);
@@ -83,20 +83,20 @@ function App() {
   };
 
 
-  const fetchLogs = async () => {
+  // const fetchLogs = async () => {
 
-    try {
+  //   try {
 
-      const response =
-        await api.get("/logs");
+  //     const response =
+  //       await api.get("/logs");
 
-      setLogs(response.data);
+  //     setLogs(response.data);
 
-    } catch (err) {
+  //   } catch (err) {
 
-      console.error(err);
-    }
-  };
+  //     console.error(err);
+  //   }
+  // };
 
 
   const fetchUsers = async () => {
@@ -139,26 +139,35 @@ function App() {
 
   useEffect(() => {
 
-    captureFrame();
+    let isMounted = true;
 
-    fetchLogs();
+    const initialize = async () => {
 
-    fetchUsers();
+      await fetchUsers();
 
-    const interval =
-      setInterval(() => {
+      pollFrames();
+    };
 
-        captureFrame();
+    const pollFrames = async () => {
 
-        fetchLogs();
+      while (isMounted) {
 
-      }, 1000);
+        await captureFrame();
 
-    return () =>
-      clearInterval(interval);
+        await new Promise((resolve) =>
+          setTimeout(resolve, 250)
+        );
+      }
+    };
+
+    initialize();
+
+    return () => {
+
+      isMounted = false;
+    };
 
   }, []);
-
 
   return (
 
@@ -202,9 +211,9 @@ function App() {
         deleteUser={deleteUser}
       />
 
-      <LogsPanel
+      {/* <LogsPanel
         logs={logs}
-      />
+      /> */}
 
     </div>
   );

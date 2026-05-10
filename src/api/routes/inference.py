@@ -11,13 +11,13 @@ from src.api.dependencies import (
     processor,
 )
 
-from src.db.database import (
-    SessionLocal,
-)
+# from src.db.database import (
+#     SessionLocal,
+# )
 
-from src.db.models import (
-    InferenceLog,
-)
+# from src.db.models import (
+#     InferenceLog,
+# )
 
 router = APIRouter()
 
@@ -44,7 +44,7 @@ async def analyze_image(file: UploadFile = File(...)):
 
     results = []
 
-    db = SessionLocal()
+    # db = SessionLocal()
 
     for f in faces:
 
@@ -60,16 +60,16 @@ async def analyze_image(file: UploadFile = File(...)):
             }
         )
 
-        log = InferenceLog(
-            name=f["name"],
-            emotion=f["emotion"],
-            score=float(f["score"]),
-        )
+        # log = InferenceLog(
+        #     name=f["name"],
+        #     emotion=f["emotion"],
+        #     score=float(f["score"]),
+        # )
 
-        db.add(log)
+        # db.add(log)
 
-    db.commit()
+    # db.commit()
 
-    db.close()
+    # db.close()
 
     return {"faces": results}
