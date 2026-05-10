@@ -32,7 +32,7 @@ class FrameProcessor:
 
         self.detector = detector
         self.recognizer = recognizer
-        self.known_faces = database.load_all_embeddings()
+        self.database = database
         self.emotion_classifier = emotion_classifier
 
         self.last_recognition = {
@@ -130,9 +130,11 @@ class FrameProcessor:
 
                     embedding = self.recognizer.get_embedding(face_crop)
 
+                    known_faces = self.database.load_all_embeddings()
+
                     current_name, current_score = self.recognizer.recognize(
                         embedding,
-                        self.known_faces,
+                        known_faces,
                     )
 
                     self.last_recognition = {

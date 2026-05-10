@@ -1,43 +1,70 @@
 # src/recognition/database.py
 
-import os
-import json
+from src.db.database import SessionLocal
+from src.db.models import FaceEmbedding
 
 
 class FaceDatabase:
-    def __init__(self, db_path="data/faces"):
-        self.db_path = db_path
 
-        os.makedirs(self.db_path, exist_ok=True)
+    def save_embeddings(
+        self,
+        name,
+        embeddings,
+    ):
 
-    def save_embeddings(self, name, embeddings):
-        """
-        Save multiple embeddings for a user.
-        """
+        db = SessionLocal()
 
-        file_path = os.path.join(self.db_path, f"{name}.json")
+        # Remove old embeddings
+        db.query(FaceEmbedding).filter(FaceEmbedding.name == name).delete()
 
-        data = {"name": name, "embeddings": embeddings}
+        for emb in embeddings:
 
-        with open(file_path, "w") as f:
-            json.dump(data, f)
+            record = FaceEmbedding(
+                name=name,
+                embedding=emb,
+            )
+
+            db.add(record)
+
+        db.commit()
+
+        db.close()
 
     def load_all_embeddings(self):
-        """
-        Load all user embeddings.
-        """
+
+        db = SessionLocal()
+
+        rows = db.query(FaceEmbedding).all()
 
         database = {}
 
-        for file in os.listdir(self.db_path):
+        for row in rows:
 
-            if file.endswith(".json"):
+            if row.name not in database:
+                database[row.name] = []
 
-                file_path = os.path.join(self.db_path, file)
+            database[row.name].append(row.embedding)
 
-                with open(file_path, "r") as f:
-                    data = json.load(f)
-
-                    database[data["name"]] = data["embeddings"]
+        db.close()
 
         return database
+
+    def delete_user(self, name):
+
+        db = SessionLocal()
+
+        db.query(FaceEmbedding).filter(FaceEmbedding.name == name).delete()
+
+        db.commit()
+
+        db.close()
+
+    def list_users(self):
+
+        db = SessionLocal()
+
+        rows = db.query(FaceEmbedding.name).distinct().all()
+
+        db.close()
+
+        return [r[0] for r in rows]
