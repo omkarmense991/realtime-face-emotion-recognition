@@ -1,7 +1,6 @@
 import { useState } from "react";
 
-import axios from "axios";
-
+import { api } from "../services/api";
 
 function RegisterUser({ fetchUsers }) {
 
@@ -33,7 +32,7 @@ function RegisterUser({ fetchUsers }) {
 
         try {
 
-            const response = await axios.post(
+            const response = await api.post(
                 "http://127.0.0.1:8000/users/register",
                 formData,
                 {
