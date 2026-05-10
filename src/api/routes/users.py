@@ -12,6 +12,10 @@ from src.api.dependencies import (
 )
 from src.services.user_services import UserService
 
+from src.api.dependencies import (
+    processor,
+)
+
 router = APIRouter()
 
 user_service = UserService()
@@ -30,6 +34,8 @@ def delete_user(name: str):
 
     database.delete_user(name)
 
+    processor.reload_known_facess()
+
     return {"message": f"{name} deleted"}
 
 
@@ -43,5 +49,7 @@ async def register_user(
         name,
         files,
     )
+
+    processor.reload_known_facess()
 
     return result

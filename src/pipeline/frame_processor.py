@@ -19,6 +19,8 @@ from src.config.settings import (
 
 from collections import deque, Counter
 
+import time
+
 
 class FrameProcessor:
 
@@ -33,6 +35,7 @@ class FrameProcessor:
         self.detector = detector
         self.recognizer = recognizer
         self.database = database
+        self.known_faces = self.database.load_all_embeddings()
         self.emotion_classifier = emotion_classifier
 
         self.last_recognition = {
@@ -56,6 +59,9 @@ class FrameProcessor:
 
         return stable_emotion
 
+    def reload_known_faces(self):
+        self.known_faces = self.database.load_all_embeddings()
+
     def process(
         self,
         frame,
@@ -72,7 +78,15 @@ class FrameProcessor:
         if frame_count is not None and frame_count % DETECTION_INTERVAL != 0:
             return self.faces
 
+        pipeline_start = time.time()
+
+        detection_start = time.time()
+
         detections = self.detector.detect(small_frame)
+
+        detection_time = time.time() - detection_start
+
+        print(f"Detection: " f"{detection_time:.3f}s")
 
         detections = keep_largest_face(detections)
 
@@ -127,15 +141,17 @@ class FrameProcessor:
             if should_run_recognition:
 
                 try:
-
+                    recognition_start = time.time()
                     embedding = self.recognizer.get_embedding(face_crop)
-
-                    known_faces = self.database.load_all_embeddings()
 
                     current_name, current_score = self.recognizer.recognize(
                         embedding,
-                        known_faces,
+                        self.known_faces,
                     )
+
+                    recognition_time = time.time() - recognition_start
+
+                    print(f"Recognition: " f"{recognition_time:.3f}s")
 
                     self.last_recognition = {
                         "name": current_name,
@@ -152,9 +168,15 @@ class FrameProcessor:
 
             if should_run_emotion:
                 try:
+
+                    emotion_start = time.time()
                     raw_emotion, emotion_score = (
                         self.emotion_classifier.predict_emotion(face_crop)
                     )
+
+                    emotion_time = time.time() - emotion_start
+
+                    print(f"Emotion: " f"{emotion_time:.3f}s")
 
                     current_emotion = self.get_stable_emotion(raw_emotion)
 
@@ -175,5 +197,9 @@ class FrameProcessor:
                     "emotion_score": emotion_score,
                 }
             )
+
+        pipeline_time = time.time() - pipeline_start
+
+        print(f"Total pipeline: " f"{pipeline_time:.3f}s")
 
         return self.faces
