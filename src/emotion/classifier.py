@@ -5,7 +5,11 @@ from deepface import DeepFace
 
 class EmotionClassifier:
 
-    def predict_emotion(self, face_image):
+    def predict_emotion(
+        self,
+        face_image,
+        threshold=85,
+    ):
 
         result = DeepFace.analyze(
             img_path=face_image,
@@ -18,4 +22,14 @@ class EmotionClassifier:
 
         confidence = result[0]["emotion"][emotion]
 
-        return emotion, confidence
+        if confidence < threshold:
+
+            return (
+                "uncertain",
+                confidence,
+            )
+
+        return (
+            emotion,
+            confidence,
+        )

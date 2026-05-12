@@ -3,15 +3,20 @@ import {
     useRef,
 } from "react";
 
-import Webcam from "react-webcam";
+import Webcam from
+    "react-webcam";
 
 
 function WebcamFeed({
+
     webcamRef,
     faces,
+    isEnrollmentMode,
+
 }) {
 
-    const canvasRef = useRef(null);
+    const canvasRef =
+        useRef(null);
 
 
     useEffect(() => {
@@ -38,7 +43,11 @@ function WebcamFeed({
                 h,
             ] = face.bbox;
 
-            ctx.strokeStyle = "lime";
+
+            ctx.strokeStyle =
+                isEnrollmentMode
+                    ? "#22d3ee"
+                    : "#00ff00";
 
             ctx.lineWidth = 3;
 
@@ -49,27 +58,41 @@ function WebcamFeed({
                 h
             );
 
-            ctx.font = "20px Arial";
 
-            ctx.fillStyle = "lime";
+            if (
+                !isEnrollmentMode
+            ) {
 
-            ctx.fillText(
-                `${face.name} | ${face.emotion}`,
-                x,
-                y - 10
-            );
+                ctx.font =
+                    "20px Arial";
+
+                ctx.fillStyle =
+                    "#00ff00";
+
+                ctx.fillText(
+                    `${face.name} | ${face.emotion}`,
+                    x,
+                    y - 10
+                );
+            }
 
         });
 
-    }, [faces]);
+    }, [
+        faces,
+        isEnrollmentMode,
+    ]);
 
 
     return (
 
         <div
             style={{
-                position: "relative",
+                position:
+                    "relative",
+
                 width: "640px",
+
                 height: "480px",
             }}
         >
@@ -80,9 +103,15 @@ function WebcamFeed({
                 width={640}
                 height={480}
                 style={{
-                    position: "absolute",
+                    position:
+                        "absolute",
+
                     top: 0,
+
                     left: 0,
+
+                    borderRadius:
+                        "16px",
                 }}
             />
 
@@ -91,8 +120,11 @@ function WebcamFeed({
                 width={640}
                 height={480}
                 style={{
-                    position: "absolute",
+                    position:
+                        "absolute",
+
                     top: 0,
+
                     left: 0,
                 }}
             />

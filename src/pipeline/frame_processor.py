@@ -40,10 +40,13 @@ class FrameProcessor:
 
         self.last_recognition = {
             "name": "Unknown",
-            "score": 0,
+            "recognition_score": 0,
         }
 
-        self.last_emotion = {"emotion": "neutral", "score": 0}
+        self.last_emotion = {
+            "emotion": "neutral",
+            "emotion_score": 0,
+        }
 
         self.faces = []
 
@@ -130,9 +133,10 @@ class FrameProcessor:
                 continue
 
             current_name = self.last_recognition["name"]
-            current_score = self.last_recognition["score"]
+            current_recognition_score = self.last_recognition["recognition_score"]
+
             current_emotion = self.last_emotion["emotion"]
-            emotion_score = self.last_emotion["score"]
+            current_emotion_score = self.last_emotion["emotion_score"]
 
             should_run_recognition = (
                 frame_count is None or frame_count % RECOGNITION_INTERVAL == 0
@@ -144,7 +148,7 @@ class FrameProcessor:
                     recognition_start = time.time()
                     embedding = self.recognizer.get_embedding(face_crop)
 
-                    current_name, current_score = self.recognizer.recognize(
+                    current_name, current_recognition_score = self.recognizer.recognize(
                         embedding,
                         self.known_faces,
                     )
@@ -155,7 +159,7 @@ class FrameProcessor:
 
                     self.last_recognition = {
                         "name": current_name,
-                        "score": current_score,
+                        "recognition_score": current_recognition_score,
                     }
 
                 except Exception as e:
@@ -170,7 +174,7 @@ class FrameProcessor:
                 try:
 
                     emotion_start = time.time()
-                    raw_emotion, emotion_score = (
+                    raw_emotion, current_emotion_score = (
                         self.emotion_classifier.predict_emotion(face_crop)
                     )
 
@@ -182,7 +186,7 @@ class FrameProcessor:
 
                     self.last_emotion = {
                         "emotion": current_emotion,
-                        "score": emotion_score,
+                        "emotion_score": current_emotion_score,
                     }
 
                 except Exception as e:
@@ -192,9 +196,9 @@ class FrameProcessor:
                 {
                     "bbox": [x, y, w, h],
                     "name": current_name,
-                    "score": current_score,
+                    "recognition_score": current_recognition_score,
                     "emotion": current_emotion,
-                    "emotion_score": emotion_score,
+                    "emotion_score": current_emotion_score,
                 }
             )
 

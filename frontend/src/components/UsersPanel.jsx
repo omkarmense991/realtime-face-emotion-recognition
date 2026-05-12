@@ -5,51 +5,64 @@ function UsersPanel({
 
     return (
 
-        <div
-            style={{
-                width: "640px",
-                marginTop: "30px",
-            }}
-        >
+        <div>
 
-            <h2>
+            <h2
+                className="
+                    text-2xl
+                    font-semibold
+                    mb-4
+                "
+            >
                 Registered Users
             </h2>
 
-            {users.length === 0 && (
-                <p>No registered users</p>
-            )}
+            <div
+                className="
+                    space-y-3
+                "
+            >
 
-            {users.map((user, idx) => (
+                {users.map((user, idx) => (
 
-                <div
-                    key={idx}
-                    style={{
-                        border: "1px solid #ccc",
-                        padding: "10px",
-                        marginBottom: "10px",
-                        display: "flex",
-                        justifyContent:
-                            "space-between",
-                        alignItems: "center",
-                    }}
-                >
-
-                    <p>
-                        <strong>{user}</strong>
-                    </p>
-
-                    <button
-                        onClick={() =>
-                            deleteUser(user)
-                        }
+                    <div
+                        key={idx}
+                        className="
+                            bg-slate-700
+                            rounded-xl
+                            p-4
+                            flex
+                            justify-between
+                            items-center
+                        "
                     >
-                        Delete
-                    </button>
 
-                </div>
+                        <span>
+                            {user}
+                        </span>
 
-            ))}
+                        <button
+                            onClick={() =>
+                                deleteUser(user)
+                            }
+                            className="
+                                bg-red-500
+                                hover:bg-red-600
+                                transition
+                                px-4
+                                py-2
+                                rounded-lg
+                                text-sm
+                            "
+                        >
+                            Delete
+                        </button>
+
+                    </div>
+
+                ))}
+
+            </div>
 
         </div>
     );

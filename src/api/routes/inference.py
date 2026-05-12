@@ -51,11 +51,15 @@ async def analyze_image(file: UploadFile = File(...)):
         results.append(
             {
                 "name": f["name"],
-                "score": round(
-                    f["score"],
-                    2,
+                "recognition_score": round(
+                    f["recognition_score"] * 100,
+                    1,
                 ),
                 "emotion": f["emotion"],
+                "emotion_score": round(
+                    f["emotion_score"],
+                    1,
+                ),
                 "bbox": f["bbox"],
             }
         )

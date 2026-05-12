@@ -34,7 +34,7 @@ def delete_user(name: str):
 
     database.delete_user(name)
 
-    processor.reload_known_facess()
+    processor.reload_known_faces()
 
     return {"message": f"{name} deleted"}
 
@@ -50,6 +50,6 @@ async def register_user(
         files,
     )
 
-    processor.reload_known_facess()
+    processor.reload_known_faces()
 
     return result

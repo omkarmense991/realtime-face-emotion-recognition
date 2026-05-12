@@ -20,6 +20,10 @@ from src.api.routes.logs import (
     router as logs_router,
 )
 
+from src.api.routes.ws import (
+    router as ws_router,
+)
+
 app = FastAPI()
 
 
@@ -46,3 +50,5 @@ app.include_router(inference_router)
 app.include_router(users_router)
 
 app.include_router(logs_router)
+
+app.include_router(ws_router)

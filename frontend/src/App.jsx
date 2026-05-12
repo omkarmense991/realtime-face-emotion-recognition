@@ -16,108 +16,58 @@ import RegisterUser from
 import UsersPanel from
   "./components/UsersPanel";
 
-// import LogsPanel from
-//   "./components/LogsPanel";
-
 import { api } from
   "./services/api";
 
 
 function App() {
 
-  const webcamRef = useRef(null);
+  const socketRef =
+    useRef(null);
+
+  const webcamRef =
+    useRef(null);
 
   const [faces, setFaces] =
     useState([]);
 
-  // const [logs, setLogs] =
-  //   useState([]);
-
   const [users, setUsers] =
     useState([]);
 
+  const [
+    isEnrollmentMode,
+    setIsEnrollmentMode,
+  ] = useState(false);
 
-  const captureFrame = async () => {
 
-    if (!webcamRef.current) return;
+  // =========================
+  // Fetch Users
+  // =========================
 
-    const imageSrc =
-      webcamRef.current.getScreenshot();
+  const fetchUsers =
+    async () => {
 
-    if (!imageSrc) return;
+      try {
 
-    const blob = await fetch(
-      imageSrc
-    ).then((res) => res.blob());
+        const response =
+          await api.get(
+            "/users/list"
+          );
 
-    const formData = new FormData();
-
-    formData.append(
-      "file",
-      blob,
-      "frame.jpg"
-    );
-
-    try {
-
-      const response =
-        await api.post(
-          "/analyze",
-          formData,
-          {
-            headers: {
-              "Content-Type":
-                "multipart/form-data",
-            },
-          }
+        setUsers(
+          response.data.users
         );
 
-      setFaces(
-        response.data.faces
-      );
+      } catch (err) {
 
-    } catch (err) {
-
-      console.error(err);
-    }
-  };
+        console.error(err);
+      }
+    };
 
 
-  // const fetchLogs = async () => {
-
-  //   try {
-
-  //     const response =
-  //       await api.get("/logs");
-
-  //     setLogs(response.data);
-
-  //   } catch (err) {
-
-  //     console.error(err);
-  //   }
-  // };
-
-
-  const fetchUsers = async () => {
-
-    try {
-
-      const response =
-        await api.get(
-          "/users/list"
-        );
-
-      setUsers(
-        response.data.users
-      );
-
-    } catch (err) {
-
-      console.error(err);
-    }
-  };
-
+  // =========================
+  // Delete User
+  // =========================
 
   const deleteUser =
     async (name) => {
@@ -137,83 +87,218 @@ function App() {
     };
 
 
+  // =========================
+  // WebSocket
+  // =========================
+
   useEffect(() => {
 
-    let isMounted = true;
+    socketRef.current =
+      new WebSocket(
+        "ws://127.0.0.1:8000/ws"
+      );
 
-    const initialize = async () => {
+    socketRef.current.onmessage =
+      (event) => {
 
-      await fetchUsers();
+        const data =
+          JSON.parse(event.data);
 
-      pollFrames();
-    };
+        setFaces(data.faces);
+      };
 
-    const pollFrames = async () => {
+    const interval =
+      setInterval(() => {
 
-      while (isMounted) {
+        if (
+          !webcamRef.current ||
+          !socketRef.current ||
+          socketRef.current
+            .readyState !==
+          WebSocket.OPEN
+        ) {
+          return;
+        }
 
-        await captureFrame();
+        const imageSrc =
+          webcamRef.current
+            .getScreenshot();
 
-        await new Promise((resolve) =>
-          setTimeout(resolve, 250)
+        if (!imageSrc) {
+          return;
+        }
+
+        socketRef.current.send(
+          imageSrc
         );
-      }
-    };
 
-    initialize();
+      }, 250);
+
+    setTimeout(() => {
+      fetchUsers();
+    }, 0);
 
     return () => {
 
-      isMounted = false;
+      clearInterval(interval);
+
+      socketRef.current?.close();
     };
 
   }, []);
 
+
+  // =========================
+  // UI
+  // =========================
+
   return (
 
     <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        padding: "20px",
-        fontFamily: "Arial",
-      }}
+      className="
+        min-h-screen
+        bg-slate-900
+        text-white
+        px-8
+        py-6
+      "
     >
 
-      <h1
-        style={{
-          textAlign: "center",
-          fontSize: "48px",
-          marginBottom: "30px",
-          lineHeight: "1.2",
-        }}
+      <div
+        className="
+          max-w-7xl
+          mx-auto
+        "
       >
-        Real-Time Face Recognition
-        & Emotion Analysis
-      </h1>
 
-      <WebcamFeed
-        webcamRef={webcamRef}
-        faces={faces}
-      />
+        <h1
+          className="
+            text-5xl
+            font-bold
+            text-center
+            mb-10
+          "
+        >
+          Real-Time Face Recognition
 
-      <LiveInference
-        faces={faces}
-      />
+          &
+          Emotion Analysis
+        </h1>
 
-      <RegisterUser
-        fetchUsers={fetchUsers}
-      />
 
-      <UsersPanel
-        users={users}
-        deleteUser={deleteUser}
-      />
+        <div
+          className="
+            grid
+            grid-cols-1
+            lg:grid-cols-3
+            gap-6
+          "
+        >
 
-      {/* <LogsPanel
-        logs={logs}
-      /> */}
+          {/* LEFT */}
+
+          <div
+            className="
+              lg:col-span-2
+              space-y-6
+            "
+          >
+
+            <div
+              className="
+                bg-slate-800
+                rounded-2xl
+                p-4
+                shadow-2xl
+              "
+            >
+
+              <WebcamFeed
+                webcamRef={webcamRef}
+                faces={faces}
+                isEnrollmentMode={
+                  isEnrollmentMode
+                }
+              />
+
+            </div>
+
+
+            {!isEnrollmentMode && (
+
+              <div
+                className="
+                  bg-slate-800
+                  rounded-2xl
+                  p-6
+                  shadow-2xl
+                "
+              >
+
+                <LiveInference
+                  faces={faces}
+                />
+
+              </div>
+
+            )}
+
+          </div>
+
+
+          {/* RIGHT */}
+
+          <div
+            className="
+              space-y-6
+            "
+          >
+
+            <div
+              className="
+                bg-slate-800
+                rounded-2xl
+                p-6
+                shadow-2xl
+              "
+            >
+
+              <RegisterUser
+                webcamRef={webcamRef}
+                faces={faces}
+                fetchUsers={fetchUsers}
+                isEnrollmentMode={
+                  isEnrollmentMode
+                }
+                setIsEnrollmentMode={
+                  setIsEnrollmentMode
+                }
+              />
+
+            </div>
+
+
+            <div
+              className="
+                bg-slate-800
+                rounded-2xl
+                p-6
+                shadow-2xl
+              "
+            >
+
+              <UsersPanel
+                users={users}
+                deleteUser={deleteUser}
+              />
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
 
     </div>
   );
