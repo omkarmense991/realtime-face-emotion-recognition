@@ -3,6 +3,16 @@ import mediapipe as mp
 
 
 class FaceDetector:
+    """
+    Realtime face detection module.
+
+    Uses MediaPipe Face Detection
+    for fast webcam inference.
+
+    Detects faces and returns:
+    - Bounding boxes
+    - Detection confidence
+    """
 
     def __init__(self):
 

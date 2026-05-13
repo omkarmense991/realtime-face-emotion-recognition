@@ -4,6 +4,17 @@ from deepface import DeepFace
 
 
 class EmotionClassifier:
+    """
+    Emotion classification service.
+
+    Uses DeepFace emotion analysis
+    to predict dominant facial
+    emotion and confidence score
+    from detected face crops.
+
+    Includes confidence thresholding
+    to suppress weak predictions.
+    """
 
     def predict_emotion(
         self,

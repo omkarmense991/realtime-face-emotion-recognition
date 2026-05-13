@@ -52,6 +52,7 @@ async def websocket_endpoint(
 
                 results.append(
                     {
+                        "track_id": f["track_id"],
                         "name": f["name"],
                         "recognition_score": round(
                             f["recognition_score"] * 100,

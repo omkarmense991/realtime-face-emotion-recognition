@@ -19,6 +19,8 @@ import UsersPanel from
 import { api } from
   "./services/api";
 
+import.meta.env.VITE_WS_URL
+
 
 function App() {
 
@@ -95,7 +97,7 @@ function App() {
 
     socketRef.current =
       new WebSocket(
-        "ws://127.0.0.1:8000/ws"
+        import.meta.env.VITE_WS_URL
       );
 
     socketRef.current.onmessage =

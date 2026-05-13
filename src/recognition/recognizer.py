@@ -8,6 +8,20 @@ from src.config.settings import RECOGNITION_THRESHOLD
 
 
 class FaceRecognizer:
+    """
+    Face embedding and recognition
+    service.
+
+    Uses FaceNet embeddings through
+    DeepFace for identity matching.
+
+    Responsibilities:
+    - Generate facial embeddings
+    - Compare embeddings using
+      cosine similarity
+    - Match identities against
+      stored user embeddings
+    """
 
     def __init__(self, model_name="Facenet"):
 

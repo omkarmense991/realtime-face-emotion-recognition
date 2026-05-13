@@ -70,7 +70,7 @@ function WebcamFeed({
                     "#00ff00";
 
                 ctx.fillText(
-                    `${face.name} | ${face.emotion}`,
+                    `${face.track_id} | ${face.name} | ${face.emotion}`,
                     x,
                     y - 10
                 );

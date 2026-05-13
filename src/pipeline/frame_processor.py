@@ -3,12 +3,12 @@
 import cv2
 
 from src.pipeline.filters import (
-    keep_largest_face,
     is_valid_detection,
     is_valid_face_size,
 )
 
 from src.config.settings import (
+    DEBUG_TIMING,
     SCALE,
     DETECTION_INTERVAL,
     RECOGNITION_INTERVAL,
@@ -20,9 +20,27 @@ from src.config.settings import (
 from collections import deque, Counter
 
 import time
+from src.tracking.centroid_tracker import (
+    CentroidTracker,
+)
 
 
 class FrameProcessor:
+    """
+    Central realtime inference pipeline.
+
+    Responsibilities:
+    - Face detection
+    - Face tracking
+    - Face recognition
+    - Emotion classification
+    - Per-face state management
+    - Emotion smoothing
+
+    Processes webcam frames and returns
+    structured face inference results
+    for rendering and streaming.
+    """
 
     def __init__(
         self,
@@ -38,25 +56,22 @@ class FrameProcessor:
         self.known_faces = self.database.load_all_embeddings()
         self.emotion_classifier = emotion_classifier
 
-        self.last_recognition = {
-            "name": "Unknown",
-            "recognition_score": 0,
-        }
-
-        self.last_emotion = {
-            "emotion": "neutral",
-            "emotion_score": 0,
-        }
+        self.face_states = {}
 
         self.faces = []
 
-        self.emotion_history = deque(maxlen=3)
+        self.emotion_histories = {}
 
-    def get_stable_emotion(self, emotion):
+        self.tracker = CentroidTracker()
 
-        self.emotion_history.append(emotion)
+    def get_stable_emotion(self, track_id, emotion):
 
-        emotion_counts = Counter(self.emotion_history)
+        if track_id not in self.emotion_histories:
+            self.emotion_histories[track_id] = deque(maxlen=3)
+
+        self.emotion_histories[track_id].append(emotion)
+
+        emotion_counts = Counter(self.emotion_histories[track_id])
 
         stable_emotion = emotion_counts.most_common(1)[0][0]
 
@@ -88,10 +103,24 @@ class FrameProcessor:
         detections = self.detector.detect(small_frame)
 
         detection_time = time.time() - detection_start
+        if DEBUG_TIMING:
+            print(f"Detection: " f"{detection_time:.3f}s")
 
-        print(f"Detection: " f"{detection_time:.3f}s")
+        detections = self.tracker.update(detections)
 
-        detections = keep_largest_face(detections)
+        active_ids = self.tracker.active_track_ids
+
+        self.face_states = {
+            track_id: state
+            for track_id, state in self.face_states.items()
+            if track_id in active_ids
+        }
+
+        self.emotion_histories = {
+            track_id: history
+            for track_id, history in self.emotion_histories.items()
+            if track_id in active_ids
+        }
 
         self.faces = []
 
@@ -106,6 +135,7 @@ class FrameProcessor:
                 continue
 
             x, y, w, h = det["bbox"]
+            track_id = det["track_id"]
 
             # Scale back
             x = int(x / SCALE)
@@ -132,11 +162,21 @@ class FrameProcessor:
             if face_crop.size == 0:
                 continue
 
-            current_name = self.last_recognition["name"]
-            current_recognition_score = self.last_recognition["recognition_score"]
+            if track_id not in self.face_states:
+                self.face_states[track_id] = {
+                    "name": "Unknown",
+                    "recognition_score": 0,
+                    "emotion": "neutral",
+                    "emotion_score": 0,
+                }
 
-            current_emotion = self.last_emotion["emotion"]
-            current_emotion_score = self.last_emotion["emotion_score"]
+            current_name = self.face_states[track_id]["name"]
+
+            current_recognition_score = self.face_states[track_id]["recognition_score"]
+
+            current_emotion = self.face_states[track_id]["emotion"]
+
+            current_emotion_score = self.face_states[track_id]["emotion_score"]
 
             should_run_recognition = (
                 frame_count is None or frame_count % RECOGNITION_INTERVAL == 0
@@ -154,13 +194,14 @@ class FrameProcessor:
                     )
 
                     recognition_time = time.time() - recognition_start
+                    if DEBUG_TIMING:
+                        print(f"Recognition: " f"{recognition_time:.3f}s")
 
-                    print(f"Recognition: " f"{recognition_time:.3f}s")
+                    self.face_states[track_id]["name"] = current_name
 
-                    self.last_recognition = {
-                        "name": current_name,
-                        "recognition_score": current_recognition_score,
-                    }
+                    self.face_states[track_id][
+                        "recognition_score"
+                    ] = current_recognition_score
 
                 except Exception as e:
 
@@ -179,21 +220,29 @@ class FrameProcessor:
                     )
 
                     emotion_time = time.time() - emotion_start
+                    if DEBUG_TIMING:
+                        print(f"Emotion: " f"{emotion_time:.3f}s")
 
-                    print(f"Emotion: " f"{emotion_time:.3f}s")
+                    current_emotion = self.get_stable_emotion(track_id, raw_emotion)
 
-                    current_emotion = self.get_stable_emotion(raw_emotion)
+                    self.face_states[track_id]["emotion"] = current_emotion
 
-                    self.last_emotion = {
-                        "emotion": current_emotion,
-                        "emotion_score": current_emotion_score,
-                    }
+                    self.face_states[track_id]["emotion_score"] = current_emotion_score
 
                 except Exception as e:
                     print(f"Emotion error: {e}")
 
+            current_name = self.face_states[track_id]["name"]
+
+            current_recognition_score = self.face_states[track_id]["recognition_score"]
+
+            current_emotion = self.face_states[track_id]["emotion"]
+
+            current_emotion_score = self.face_states[track_id]["emotion_score"]
+
             self.faces.append(
                 {
+                    "track_id": track_id,
                     "bbox": [x, y, w, h],
                     "name": current_name,
                     "recognition_score": current_recognition_score,
@@ -203,7 +252,7 @@ class FrameProcessor:
             )
 
         pipeline_time = time.time() - pipeline_start
-
-        print(f"Total pipeline: " f"{pipeline_time:.3f}s")
+        if DEBUG_TIMING:
+            print(f"Total pipeline: " f"{pipeline_time:.3f}s")
 
         return self.faces
