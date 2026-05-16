@@ -4,42 +4,23 @@ services:
 
     build: .
 
-    container_name: fer-backend
-
     ports:
       - "8000:8000"
 
     depends_on:
       - db
 
+    volumes:
+      - .:/app
+
     env_file:
       - .env
-
-    restart: unless-stopped
-
-
-  frontend:
-
-    build: ./frontend
-
-    container_name: fer-frontend
-
-    ports:
-      - "5173:5173"
-
-    depends_on:
-      - backend
-
-    restart: unless-stopped
-
 
   db:
 
     image: postgres:15
 
-    container_name: fer-db
-
-    restart: unless-stopped
+    restart: always
 
     environment:
       POSTGRES_USER: postgres
