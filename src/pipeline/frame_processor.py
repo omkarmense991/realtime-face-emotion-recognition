@@ -53,7 +53,10 @@ class FrameProcessor:
         self.detector = detector
         self.recognizer = recognizer
         self.database = database
-        self.known_faces = self.database.load_all_embeddings()
+        # Lazy-loaded after app startup
+        # to avoid querying DB before
+        # tables are created.
+        self.known_faces = {}
         self.emotion_classifier = emotion_classifier
 
         self.face_states = {}
@@ -95,7 +98,10 @@ class FrameProcessor:
 
         if frame_count is not None and frame_count % DETECTION_INTERVAL != 0:
             return self.faces
-
+        # Lazy-load embeddings after
+        # application startup.
+        if not self.known_faces:
+            self.reload_known_faces()
         pipeline_start = time.time()
 
         detection_start = time.time()
