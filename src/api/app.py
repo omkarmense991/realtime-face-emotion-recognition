@@ -4,9 +4,14 @@ from fastapi.middleware.cors import (
     CORSMiddleware,
 )
 
-from src.db.database import engine
+from src.db.database import (
+    engine,
+    Base,
+)
 
-from src.db.models import Base
+# Import models so SQLAlchemy
+# registers them before create_all
+from src.db import models  # noqa: F401
 
 from src.api.routes.inference import (
     router as inference_router,
@@ -26,9 +31,7 @@ from src.api.routes.ws import (
 
 app = FastAPI()
 
-
 Base.metadata.create_all(bind=engine)
-
 
 app.add_middleware(
     CORSMiddleware,
