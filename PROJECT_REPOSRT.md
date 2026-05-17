@@ -1,16 +1,18 @@
 # Real-Time Face Recognition & Emotion Analysis System
 
-A production-style realtime AI system for:
+## Overview
+
+This project is a production-style realtime AI system that performs:
 
 - Face detection
 - Face recognition
 - Emotion analysis
 - Live biometric enrollment
-- WebSocket streaming
+- Realtime websocket inference streaming
 - Multi-face tracking
 - Cloud deployment
 
-Built using FastAPI, DeepFace, MediaPipe, React, Docker, PostgreSQL, and AWS.
+The system was designed as an end-to-end ML engineering project focused not only on model inference, but also on realtime systems architecture, backend engineering, frontend orchestration, deployment, and production tradeoff analysis.
 
 ---
 
@@ -18,17 +20,18 @@ Built using FastAPI, DeepFace, MediaPipe, React, Docker, PostgreSQL, and AWS.
 
 ## Realtime Face Detection
 
-- MediaPipe-based optimized detection
-- Low-latency realtime inference
-- Bounding-box overlay rendering
+- MediaPipe-based face detection
+- Optimized for realtime performance
+- Bounding-box tracking overlay
+- Multiple face support
 
 ---
 
 ## Face Recognition
 
 - DeepFace FaceNet embeddings
-- Cosine similarity matching
 - Multi-sample biometric enrollment
+- Cosine similarity matching
 - Persistent per-track identity state
 
 ---
@@ -42,19 +45,19 @@ Built using FastAPI, DeepFace, MediaPipe, React, Docker, PostgreSQL, and AWS.
 
 ---
 
-## Live Biometric Enrollment
+## Live Enrollment System
 
-The enrollment flow was redesigned into a guided realtime onboarding experience.
+The original image-upload enrollment flow was replaced with a guided biometric enrollment experience.
 
 Users:
 
 1. Enter a name
-2. Start live enrollment
-3. Perform guided head movements
-4. Automatically capture multiple face samples
-5. Generate stronger embeddings
+2. Start enrollment
+3. Perform guided head movements and expressions
+4. Automatically capture multiple samples
+5. Generate robust face embeddings
 
-This significantly improved recognition robustness and overall UX.
+This significantly improved recognition robustness while also creating a more production-style user experience.
 
 ---
 
@@ -65,29 +68,61 @@ The frontend streams webcam frames to the backend using WebSockets.
 Benefits:
 
 - Lower latency
-- Smoother inference updates
 - Reduced HTTP overhead
-- Better realtime responsiveness
+- Smoother realtime experience
+- Better UI responsiveness
 
 ---
 
-## Multi-Face Tracking
+## Face Tracking
 
-Implemented lightweight centroid-based face tracking.
+Implemented lightweight centroid-based tracking.
 
 Features:
 
 - Persistent track IDs
-- Stable UI overlays
-- Per-face state management
+- Per-face recognition persistence
+- Per-face emotion persistence
 - Reduced inference recomputation
+- Stable UI overlays
 
-Example:
+Example overlay:
 
 ```text
 #0 | Omkar
 happy | 91%
 ```
+
+---
+
+## Cloud Deployment
+
+Frontend and backend were deployed as independent services.
+
+### Frontend
+
+- React + Vite
+- Hosted on Vercel
+
+### Backend
+
+- FastAPI
+- Dockerized ML inference pipeline
+- Hosted on AWS EC2
+
+### Database
+
+- PostgreSQL
+- Containerized with Docker Compose
+
+### Secure Networking
+
+Cloudflare Tunnel was used to:
+
+- Enable HTTPS/WSS communication
+- Avoid manual SSL setup
+- Avoid Nginx configuration
+- Enable secure websocket connectivity
 
 ---
 
@@ -99,7 +134,7 @@ happy | 91%
 - Vite
 - Tailwind CSS
 - WebSocket API
-- HTML Canvas
+- HTML Canvas overlays
 
 ---
 
@@ -164,58 +199,77 @@ Frontend Overlay Rendering
 
 # Performance Optimizations
 
-## MTCNN → MediaPipe Migration
+Several optimizations were introduced during development.
 
-Face detection was migrated from MTCNN to MediaPipe.
+## Detection Optimization
 
-### Benchmark
+### MTCNN → MediaPipe Migration
+
+MTCNN was initially used for face detection but later replaced with MediaPipe due to significantly lower detection latency.
+
+### Benchmark Comparison
 
 | Detector  | Detection Time |
 | --------- | -------------- |
 | MTCNN     | ~70ms          |
 | MediaPipe | ~6ms           |
 
-This significantly improved realtime responsiveness.
+This substantially improved realtime responsiveness.
 
 ---
 
-## Additional Optimizations
+## Frame Scaling
 
-- Frame scaling before detection
-- Interval-based inference execution
-- Emotion smoothing
-- Tracking-based recognition persistence
-- WebSocket streaming instead of polling
+Frames were resized before detection to reduce computation.
 
 ---
 
-# Deployment
+## Interval-Based Inference
 
-## Frontend
+Detection, recognition, and emotion analysis were executed at configurable intervals instead of every frame.
 
-- Hosted on Vercel
+---
 
-## Backend
+## Emotion Smoothing
 
-- Dockerized FastAPI service
-- Hosted on AWS EC2
+Emotion predictions were stabilized using short rolling history windows.
 
-## Secure Networking
+---
 
-Cloudflare Tunnel was used to:
+## Tracking-Based Persistence
 
-- Enable HTTPS/WSS communication
-- Avoid manual SSL setup
-- Avoid Nginx configuration
-- Secure websocket streaming
+Tracking allowed recognition and emotion state reuse across frames.
+
+Benefits:
+
+- Lower compute usage
+- Reduced UI flickering
+- Smoother identity persistence
 
 ---
 
 # Engineering Challenges
 
-The primary deployment challenge became infrastructure limitations rather than application logic.
+## WebSocket + HTTPS Compatibility
 
-The project was deployed on a small AWS EC2 instance (`t3.micro`, 1 GB RAM) while running:
+Because the frontend was hosted on HTTPS, browsers blocked insecure websocket connections.
+
+Solution:
+
+- Cloudflare Tunnel
+- WSS support
+- Secure backend exposure
+
+---
+
+## Infrastructure Constraints
+
+The system was deployed on a small AWS EC2 instance:
+
+- t3.micro
+- 1 GB RAM
+
+The combined workload of:
 
 - TensorFlow
 - DeepFace
@@ -224,12 +278,14 @@ The project was deployed on a small AWS EC2 instance (`t3.micro`, 1 GB RAM) whil
 - PostgreSQL
 - Docker containers
 
-Under continuous realtime inference load, the instance frequently exhausted available resources, leading to:
+created significant resource pressure.
+
+Observed issues:
 
 - SSH disconnects
 - WebSocket interruptions
 - Cloudflare tunnel instability
-- Memory pressure issues
+- Memory exhaustion
 
 At this stage the deployment architecture had already been validated successfully, so further optimization work was intentionally deferred.
 
@@ -237,62 +293,16 @@ At this stage the deployment architecture had already been validated successfull
 
 # Future Improvements
 
-Potential future upgrades:
+Potential future upgrades include:
 
 - Async inference queues
 - GPU inference
 - ONNX optimization
-- Redis buffering
+- Redis-based frame buffering
 - Kubernetes deployment
-- Advanced tracking systems
+- Advanced tracking systems (DeepSORT / ByteTrack)
 - Liveness detection
-
----
-
-# Run Locally
-
-## Clone Repository
-
-```bash
-git clone <repo-url>
-cd realtime-face-emotion-recognition
-```
-
----
-
-## Backend Setup
-
-```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
----
-
-## Start Backend
-
-```bash
-uvicorn src.api.app:app --reload
-```
-
----
-
-## Frontend Setup
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
----
-
-# Docker Deployment
-
-```bash
-docker compose up --build
-```
+- Face embedding caching
 
 ---
 
